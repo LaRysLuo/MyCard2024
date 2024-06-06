@@ -37,19 +37,17 @@ namespace Larik.CardGame
             int index = 0;
             cardList.ForEach((card) =>
             {
-                Debug.Log("11" + list[index]);
+                Add(card);
                 CardInfo cardInfo = new(index, list[index]);
                 card.Init(cardInfo, onCardPlayed);
                 index++;
             });
-            //将卡牌对象放入牌组
-            cardList.ForEach(card => Add(card));
         }
 
         public DisplayCard Draw()
         {
             //从牌组最上方拿到1张卡
-            return (DisplayCard)CardList.Take(1);
+            return CardList.Take(1).ToList().FirstOrDefault();
         }
     }
 

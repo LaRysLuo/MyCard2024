@@ -4,13 +4,23 @@ using UnityEngine;
 namespace Larik.CardGame
 {
     /// <summary>
-    /// 玩家操作的时期
+    /// 玩家的输入控制器
+    /// 本地玩家的回合开始时，输入控制器就会启动，可以进行以下操作
+    /// 1. 打出卡牌：拖动卡牌到场地上，就可以打出该卡牌并发动效果
+    /// 2. 查看卡牌详情：在左上角显示一个展示卡牌数据的面板。这个面板在有其他卡牌效果触发时，也会切换显示
+    /// 3. 结束回合：点击回合结束按钮，或者一些效果的特殊触发强制结束。
+    /// 非自己回合时，可进行以下查看：
+    /// 1. 点击查看场地上的卡牌。
+    /// 2. 点击查看自己手上。
+    /// 3. 点击查看双方墓地里的卡牌，用一个面板显示出来
+    /// 4. 点击空场地可以关闭当前正在显示的卡牌数据面板
+    /// 在对手回合出现可连锁的卡牌时
     /// </summary>
     public class InputManager
     {
         private Promise inputPromise;
 
-        private bool inputEnable = false;
+
 
         private ClientPlayer turnPlayer;
 
@@ -34,38 +44,54 @@ namespace Larik.CardGame
 
         public void OnPlayerAction(string type, ClientPlayer source, DisplayCard card, Action<bool> actions)
         {
-            Debug.Log(123);
             // if (!source.IsLocalPlayer) actions?.Invoke(false);
             // if (turnPlayer != source) actions?.Invoke(false);
-            if (type == "onBeginDrag") HandleStartDrag(actions);
+            if (type == "onBeginDrag") HandleStartDrag(card, actions);
             if (type == "onDrag") HandleOnDrag(actions);
-            if (type == "onEndDrag") HandleEndDrag(actions);
-            // if (type == "onPlayed") return HandlePlayedCard(source, card);
+            if (type == "onEndDrag") HandleEndDrag(card, actions);
+            if (type == "onView") HandleView(card,actions);
+            if (type == "onPlayed") HandlePlayedCard(source, card);
         }
 
+        private bool inputEnable = false;
         private bool isDraging = false;
 
-        private bool Dragable()
+        /// <summary>
+        /// 是否可拖动
+        /// 1. 只有自己的手牌能拖动
+        /// 2. 只有自己的回合才能拖动卡牌
+        /// 3. 效果处理中不能拖动卡牌
+        /// </summary>
+        /// <returns></returns>
+        private bool Dragable(DisplayCard triggerCard)
         {
-            // if (!inputEnable) return false;
-            if (isDraging) return false;
+            if (!(triggerCard.IsInHand && triggerCard.IsLocalCard)) return false; //只有自己的手牌能拖动
+            if (!inputEnable) return false; //只有自己的回合才能拖动
+            if (isDraging) return false; //如果已经在拖动其他卡牌了不能再拖动
             return true;
         }
 
-        private bool Viewable()
+        /// <summary>
+        /// 是否可查看卡牌
+        /// </summary>
+        /// <param name="triggerCard"></param>
+        /// <returns></returns>
+        private bool Viewable(DisplayCard triggerCard)
         {
-
+            if (isDraging) return false;//拖拽中的卡牌不能查看
+            if (triggerCard.IsInDeck) return false; //在牌组的牌不能查看
+            if (!triggerCard.IsLocalCard && triggerCard.IsInHand) return false; //对手手牌不能查看
             return true;
         }
 
         /// <summary>
         /// 处理拖动
         /// </summary>
-        private void HandleStartDrag(Action<bool> actions)
+        private void HandleStartDrag(DisplayCard triggerCard, Action<bool> actions)
         {
-            if (!Dragable())
+            if (!Dragable(triggerCard))
             {
-                Debug.LogError(111);
+                Debug.LogError("现在不是你的回合");
                 actions?.Invoke(false);
                 return;
             }
@@ -87,9 +113,9 @@ namespace Larik.CardGame
         /// 处理结束拖动
         /// </summary>
         /// <returns></returns>
-        private void HandleEndDrag(Action<bool> actions)
+        private void HandleEndDrag(DisplayCard triggerCard, Action<bool> actions)
         {
-            if (!Dragable())
+            if (!Dragable(triggerCard))
             {
                 actions?.Invoke(false);
                 return;
@@ -100,32 +126,65 @@ namespace Larik.CardGame
 
         /// <summary>
         /// 处理玩家打出卡牌
+        /// 该方法会回到GameFacede中执行
         /// </summary>
         /// <param name="source">触发玩家</param>
         /// <param name="card">触发卡牌</param>
         /// <returns></returns>
-        private Promise HandlePlayedCard(ClientPlayer source, DisplayCard card)
+        private void HandlePlayedCard(ClientPlayer source, DisplayCard card)
         {
-            Promise pms = onPlayerPlayCard?.Invoke(source, card);
-            return pms;
+            if (onPlayerPlayCard == null)
+            {
+                Debug.LogError("出现错误，InputManager没有订阅PlayCard事件！");
+                return;
+            }
+            inputEnable = false; //关闭输入状态
+            onPlayerPlayCard?.Invoke(source, card).OnComplete(HandlePlayedCardComplete);
         }
 
         /// <summary>
-        /// 处理放大观看
+        /// 处理玩家打出卡牌结束
+        /// 1. 恢复InputManager的输入状态
         /// </summary>
-        private void HandleView() { }
+        /// <param name="_">Promise的返回参数，通常为true或false，不过这里是空</param>
+        private void HandlePlayedCardComplete(string _)
+        {
+            inputEnable = true;//恢复输入
+        }
 
         /// <summary>
-        /// 打出卡牌
+        /// 处理卡牌是否能被查看
         /// </summary>
-        public void OnPlayedCard() { }
+        private void HandleView(DisplayCard triggerCard, Action<bool> actions)
+        {
+            actions?.Invoke(Viewable(triggerCard));
+        }
+
+        /// <summary>
+        /// 处理卡牌移入放大
+        /// </summary>
+        private void HanldeZoomIn(){}
+
+        /// <summary>
+        /// 处理卡牌移出缩小
+        /// </summary>
+        private void HandleZoomOut(){}
+
+
+        /// <summary>
+        /// 处理查看卡牌详情
+        /// 在左上角显示卡牌详情页面
+        /// </summary>
+        private void handleViewDetails() { }
+
 
         /// <summary>
         /// 当回合结束按钮被按下时或因为其他原因回合结束
         /// </summary>
         public void OnTurnEnd()
         {
-            inputPromise.Resolve();
+            inputEnable = false; //关闭输入状态
+            inputPromise.Resolve(); //结束输入模式
         }
     }
 }

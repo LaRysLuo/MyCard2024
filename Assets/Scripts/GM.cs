@@ -16,6 +16,8 @@ public class GM : MonoBehaviour
 
     private void Start()
     {
+        
         gameFacede.BuildDeck(gameFacede.MakeDeck());
+        gameFacede.DrawFirstHand();
     }
 }

@@ -17,6 +17,8 @@ namespace Larik.CardGame
         public void Add(DisplayCard card)
         {
             card.transform.SetParent(transform);
+            // card.Init();
+            card.RefreshCardInfo();
             card.transform.localPosition = Vector3.zero;
         }
     }

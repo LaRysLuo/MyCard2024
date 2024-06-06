@@ -51,6 +51,10 @@ namespace Larik.CardGame
             string symbol = index == 0 ? "self" : "opponent";
             playerView = GameObject.Instantiate(AssetManager.PlayerViewPrefab, AssetManager.BattleGrid).GetComponent<PlayerView>();
             playerView.gameObject.name = symbol;
+            if(symbol == "opponent"){
+                //把位置旋转180度
+                playerView.transform.Rotate(0,0, 180);
+            }
         }
 
         /// <summary>

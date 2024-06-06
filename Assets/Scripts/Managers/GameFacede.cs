@@ -127,8 +127,9 @@ namespace Larik.CardGame
 
         /// <summary>
         /// 开场为双方玩家抽取手牌
+        /// 1. 抽取5张手牌
         /// </summary>
-        private void DrawFirstHand()
+        public void DrawFirstHand()
         {
             playerManager.playerList.ForEach(player =>
             {
@@ -136,6 +137,9 @@ namespace Larik.CardGame
             });
         }
 
+        /// <summary>
+        /// 准备就绪，游戏开始
+        /// </summary>
         public void StartGame()
         {
             turnManager.StartGame();
