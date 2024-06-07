@@ -29,6 +29,8 @@ namespace Larik.CardGame
 
         public InputManager inputManager;
 
+        public UIManager uiManager;
+
         public void InitGame()
         {
             Debug.Log("游戏初始化");
@@ -37,6 +39,7 @@ namespace Larik.CardGame
             InitDataManager();
             InitTurnManager();
             InitInputManager();
+            InitUIManager();
         }
 
         #region 初始化
@@ -71,6 +74,13 @@ namespace Larik.CardGame
         {
             inputManager = new();
             inputManager.AddEventListener(OnPlayerInputPlayCard);
+
+        }
+
+        private void InitUIManager()
+        {
+            uiManager = GameObject.Find("Canvas").GetComponent<UIManager>();
+            // uiManager.AddEventListener(inputManager.OnPlayerAction);
         }
         #endregion
 
@@ -125,16 +135,31 @@ namespace Larik.CardGame
             });
         }
 
+
+        private int count = 0;
         /// <summary>
         /// 开场为双方玩家抽取手牌
         /// 1. 抽取5张手牌
         /// </summary>
-        public void DrawFirstHand()
+        public Promise DrawFirstHand()
         {
+            Promise pms = new();
+            List<Promise> actions = new();
             playerManager.playerList.ForEach(player =>
             {
-                player.DrawFirstHand();
+                actions.Add(player.DrawFirstHand());
+                // actions.Add(() => player.DrawFirstHand());
             });
+            actions.ForEach(action => action.OnComplete(_ =>
+            {
+                count++;
+                if(count >= 2){
+                    Debug.LogWarning("双方玩家抽取完毕");
+                    pms.Resolve();
+                }
+            }));
+
+            return pms;
         }
 
         /// <summary>
@@ -157,8 +182,10 @@ namespace Larik.CardGame
         /// <returns></returns>
         private Promise OnTurnStart(int current, int turns)
         {
+            Debug.LogWarning("回合开始了");
             Promise turnPromise = new();
             Promise.SequentialCall(new(){
+        
                 //1. 抽1张牌
                 ()=>TurnPlayer(current).DrawCard(1),
                 //2. 检查在此时要发动的牌
@@ -166,7 +193,7 @@ namespace Larik.CardGame
                 //3. 等待玩家进行回合
                 ()=> inputManager.Active(TurnPlayer(current))
 
-            }, 0.1f).OnComplete(_ =>
+            }, 0.5f).OnComplete(_ =>
             {
                 //回合结束
                 turnPromise.Resolve();

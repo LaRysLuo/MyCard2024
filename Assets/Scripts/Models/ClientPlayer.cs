@@ -130,7 +130,7 @@ namespace Larik.CardGame
         {
             Promise pms = new();
             DisplayCard card = playerView.Deck.Draw();
-            LeanTween.move(card.gameObject, playerView.Hand.transform, 0.3f).setOnComplete(_ =>
+            LeanTween.move(card.gameObject, playerView.Hand.EndPoint, 0.3f).setOnComplete(_ =>
             {
                 playerView.Hand.Add(card);
                 pms.Resolve();

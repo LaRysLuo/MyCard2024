@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 namespace Larik.CardGame
 {
-    public class DisplayCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
+    public class DisplayCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         public CardInfo cardInfo;
 
@@ -37,12 +37,12 @@ namespace Larik.CardGame
         public bool IsInHand => transform.parent.gameObject.name == "Hand";
 
 
-        public void Init(CardInfo cardInfo, Action<string, DisplayCard, Action<bool>> onPlayerAction)
+        public void Init(CardInfo cardInfo, Action<string, DisplayCard, Action<bool>> onPlayerAction,bool isInstCard = true)
         {
             this.cardInfo = cardInfo;
             this.onPlayerAction = onPlayerAction;
             gameObject.name = cardInfo.name;
-            RefreshCardInfo();
+            RefreshCardInfo(isInstCard);
             InitLongHoldEvent();
         }
 
@@ -57,12 +57,12 @@ namespace Larik.CardGame
         /// <summary>
         /// 刷新卡牌信息
         /// </summary>
-        public void RefreshCardInfo()
+        public void RefreshCardInfo(bool isInstCard = true)
         {
             cardName.text = cardInfo.name;
             cardTypeName.text = cardInfo.cardType.ToString();
             contentText.text = cardInfo.desc;
-
+            if (!isInstCard) SetBackState(false);
             onPlayerAction?.Invoke("onView", this, (isEnable) =>
             {
                 Debug.Log(123);
@@ -164,6 +164,19 @@ namespace Larik.CardGame
             transform.localScale = transOriginLocalScale;
             transform.SetSiblingIndex(originalSiblingIndex);
             LayoutGroup.enabled = true;
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            //点击左键
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                onPlayerAction?.Invoke("onView", this, (isEnable) =>
+                {
+                    if (!isEnable) return;
+                    CardDetail.ShowCardDetail(cardInfo);
+                });
+            }
         }
 
         #endregion

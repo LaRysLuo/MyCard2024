@@ -7,6 +7,7 @@ namespace Larik.CardGame
 {
     public abstract class CardGrid : MonoBehaviour
     {
+        public Transform EndPoint => transform.Find("EndPoint");
         public List<DisplayCard> CardList => GetComponentsInChildren<DisplayCard>().ToList();
 
         public bool Contains(DisplayCard card)
@@ -17,9 +18,11 @@ namespace Larik.CardGame
         public void Add(DisplayCard card)
         {
             card.transform.SetParent(transform);
+
             // card.Init();
             card.RefreshCardInfo();
             card.transform.localPosition = Vector3.zero;
+            if (EndPoint) EndPoint.SetAsLastSibling();
         }
     }
 

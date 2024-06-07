@@ -16,8 +16,15 @@ public class GM : MonoBehaviour
 
     private void Start()
     {
-        
         gameFacede.BuildDeck(gameFacede.MakeDeck());
-        gameFacede.DrawFirstHand();
+        gameFacede.DrawFirstHand().OnComplete((_) =>
+        {
+            LeanTween.delayedCall(1f, () =>
+            {
+                gameFacede.StartGame();
+            });
+        });
+
+
     }
 }

@@ -17,6 +17,7 @@ namespace Larik.CardGame
         public void StartGame()
         {
             turns = 0;
+            NextTurn();
         }
 
         public void NextTurn()
