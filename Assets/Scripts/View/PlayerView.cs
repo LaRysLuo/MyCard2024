@@ -6,6 +6,7 @@ namespace Larik.CardGame
 {
     public class PlayerView : MonoBehaviour
     {
+        public PlayerPanel PlayerPanel => GetComponent<PlayerPanel>();
         /// <summary>
         /// 牌组
         /// </summary>

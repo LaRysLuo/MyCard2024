@@ -20,6 +20,9 @@ namespace Larik.CardGame
         [SerializeField] private Transform fontTrans;
         [SerializeField] private Transform backTrans;
 
+        private RectTransform CanvasRectTrans => GameObject.Find("Canvas").GetComponent<RectTransform>();
+        private CanvasGroup CanvasGroup => GetComponent<CanvasGroup>();
+
 
         private bool isBack = false;
 
@@ -37,7 +40,7 @@ namespace Larik.CardGame
         public bool IsInHand => transform.parent.gameObject.name == "Hand";
 
 
-        public void Init(CardInfo cardInfo, Action<string, DisplayCard, Action<bool>> onPlayerAction,bool isInstCard = true)
+        public void Init(CardInfo cardInfo, Action<string, DisplayCard, Action<bool>> onPlayerAction, bool isInstCard = true)
         {
             this.cardInfo = cardInfo;
             this.onPlayerAction = onPlayerAction;
@@ -51,6 +54,8 @@ namespace Larik.CardGame
         /// </summary>
         private void InitLongHoldEvent()
         {
+            LongHoldEvent longHoldEvent = GetComponent<LongHoldEvent>();
+            if (longHoldEvent == null) return;
             GetComponent<LongHoldEvent>().AddEventListener(OnLongHoldHappened);
         }
 
@@ -84,6 +89,8 @@ namespace Larik.CardGame
         #region 拖动Drag
 
 
+        private Vector2 originalPosition;
+        private RectTransform RectTrans => GetComponent<RectTransform>();
 
         /// <summary>
         /// 开始拖动
@@ -91,12 +98,22 @@ namespace Larik.CardGame
         /// <param name="eventData"></param>
         public void OnBeginDrag(PointerEventData eventData)
         {
-
             onPlayerAction?.Invoke("onBeginDrag", this, (isEnable) =>
             {
-                Debug.Log(111);
                 if (!isEnable) return;
+                ResetCard();
+                LayoutGroup.enabled = false;//关闭Layout
+                CanvasGroup.alpha = 0.7f;
+                CanvasGroup.blocksRaycasts = false;
+                RectTrans.localScale = Vector2.one * 0.5f;
 
+                originalSiblingIndex = transform.GetSiblingIndex(); //获取当前优先级
+                transform.SetAsLastSibling(); //设置优先级到最前
+
+                //世界坐标/本地坐标/屏幕坐标的相互转换
+                Vector2 mousePosition = Input.mousePosition;
+                RectTransformUtility.ScreenPointToWorldPointInRectangle(CanvasRectTrans, mousePosition, null, out Vector3 worldPos);
+                RectTrans.position = worldPos / CanvasRectTrans.localScale.x;
 
             });
         }
@@ -123,8 +140,7 @@ namespace Larik.CardGame
             onPlayerAction?.Invoke("onEndDrag", this, (isEnable) =>
             {
                 if (!isEnable) return;
-                // transform.SetSiblingIndex(originalSiblingIndex); //设置优先级到初始位
-                transform.parent.GetComponent<HorizontalLayoutGroup>().enabled = true;//开启Layout
+                ResetCard();
             });
         }
 
@@ -146,7 +162,7 @@ namespace Larik.CardGame
         {
             onPlayerAction?.Invoke("onView", this, (isEnable) =>
             {
-                Debug.Log("onView:" + isEnable);
+                // Debug.Log("onView:" + isEnable);
                 if (!isEnable) return;
                 //卡牌放大10%
                 LayoutGroup.enabled = false;
@@ -161,9 +177,7 @@ namespace Larik.CardGame
         public void OnPointerExit(PointerEventData eventData)
         {
             if (!isZoom) return;
-            transform.localScale = transOriginLocalScale;
-            transform.SetSiblingIndex(originalSiblingIndex);
-            LayoutGroup.enabled = true;
+            ResetCard();
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -177,6 +191,18 @@ namespace Larik.CardGame
                     CardDetail.ShowCardDetail(cardInfo);
                 });
             }
+        }
+
+
+        private void ResetCard()
+        {
+            CanvasGroup.alpha = 1f;
+            CanvasGroup.blocksRaycasts = true;
+            RectTrans.localScale = Vector2.one;
+            transform.localScale = transOriginLocalScale;
+            transform.SetSiblingIndex(originalSiblingIndex);
+            LayoutGroup.enabled = true;
+            isZoom = false;
         }
 
         #endregion

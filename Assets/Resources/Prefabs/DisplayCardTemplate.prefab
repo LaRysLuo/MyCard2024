@@ -450,7 +450,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5351155695711135253}
   - component: {fileID: 5542349976045607898}
-  - component: {fileID: 6232963113924417490}
+  - component: {fileID: 243319763737703705}
   m_Layer: 5
   m_Name: DisplayCardTemplate
   m_TagString: Untagged
@@ -477,7 +477,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 196, y: 2}
+  m_SizeDelta: {x: 196, y: 292}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &5542349976045607898
 MonoBehaviour:
@@ -503,18 +503,18 @@ MonoBehaviour:
   contentText: {fileID: 2854924056894921802}
   fontTrans: {fileID: 4421518468931051823}
   backTrans: {fileID: 8967777118074396773}
---- !u!114 &6232963113924417490
-MonoBehaviour:
+--- !u!225 &243319763737703705
+CanvasGroup:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3620334724065090246}
   m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7079224fde3086346b67178a680f9042, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &4107560939978720358
 GameObject:
   m_ObjectHideFlags: 0

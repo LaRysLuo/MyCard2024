@@ -24,7 +24,7 @@ namespace Larik.CardGame
         {
             turns++;
             current = turns % 2;
-            onTurnStart?.Invoke(current, turns).OnComplete((_) => NextTurn());
+            onTurnStart?.Invoke(current - 1, turns).OnComplete((_) => NextTurn());
         }
     }
 }

@@ -49,12 +49,14 @@ namespace Larik.CardGame
         public ClientPlayer(int index)
         {
             string symbol = index == 0 ? "self" : "opponent";
-            playerView = GameObject.Instantiate(AssetManager.PlayerViewPrefab, AssetManager.BattleGrid).GetComponent<PlayerView>();
+            string path = string.Format("Canvas/BattleField/{0}", symbol);
+            playerView = GameObject.Find(path).GetComponent<PlayerView>();
             playerView.gameObject.name = symbol;
-            if(symbol == "opponent"){
-                //把位置旋转180度
-                playerView.transform.Rotate(0,0, 180);
-            }
+            // if (symbol == "opponent")
+            // {
+            //     //把位置旋转180度
+            //     playerView.transform.Rotate(0, 0, 180);
+            // }
         }
 
         /// <summary>
@@ -79,7 +81,8 @@ namespace Larik.CardGame
         /// </summary>
         public Promise HandleTurnStartEffect()
         {
-            return new();
+            Debug.LogWarning("正在处理回合开始的效果");
+            return new Promise().Resolve();
         }
 
         /// <summary>
@@ -213,10 +216,12 @@ namespace Larik.CardGame
         /// 受到伤害
         /// </summary>
         /// <param name="val">伤害值</param>
-        public void OnDamage(int val)
+        public Promise OnDamage(int val)
         {
             HandleDamageEffect(ref val);
             lifePoint -= val;
+            //刷新UI面板的生命值
+            return playerView.PlayerPanel.RefreshLifePoint(lifePoint);
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Larik.CardGame
 {
@@ -18,17 +19,21 @@ namespace Larik.CardGame
     /// </summary>
     public class InputManager
     {
+        private Button TurnEndBtn => GameFacede.Get().uiManager.turnEndBtn;
+
         private Promise inputPromise;
-
-
-
         private ClientPlayer turnPlayer;
 
         private Func<ClientPlayer, DisplayCard, Promise> onPlayerPlayCard;
 
+        /// <summary>
+        /// 初始化添加事件监听，一次游戏触发1次
+        /// </summary>
+        /// <param name="onPlayerPlayCard"></param>
         public void AddEventListener(Func<ClientPlayer, DisplayCard, Promise> onPlayerPlayCard)
         {
             this.onPlayerPlayCard = onPlayerPlayCard;
+            TurnEndBtn.onClick.AddListener(HandleTurnEnd);
         }
 
         /// <summary>
@@ -36,9 +41,13 @@ namespace Larik.CardGame
         /// </summary>
         public Promise Active(ClientPlayer turnPlayer)
         {
-            inputPromise = new();
-            inputEnable = true;
             this.turnPlayer = turnPlayer;
+            inputPromise = new();
+            //如果不是本地玩家，返回等待其他玩家操作
+            if (!turnPlayer.IsLocalPlayer) return inputPromise;
+            Debug.LogWarning("现在是你的回合");
+            inputEnable = true;
+            HandleShowTurnEndBtn();
             return inputPromise;
         }
 
@@ -49,7 +58,7 @@ namespace Larik.CardGame
             if (type == "onBeginDrag") HandleStartDrag(card, actions);
             if (type == "onDrag") HandleOnDrag(actions);
             if (type == "onEndDrag") HandleEndDrag(card, actions);
-            if (type == "onView") HandleView(card,actions);
+            if (type == "onView") HandleView(card, actions);
             if (type == "onPlayed") HandlePlayedCard(source, card);
         }
 
@@ -115,7 +124,7 @@ namespace Larik.CardGame
         /// <returns></returns>
         private void HandleEndDrag(DisplayCard triggerCard, Action<bool> actions)
         {
-            if (!Dragable(triggerCard))
+            if (!isDraging)
             {
                 actions?.Invoke(false);
                 return;
@@ -163,12 +172,12 @@ namespace Larik.CardGame
         /// <summary>
         /// 处理卡牌移入放大
         /// </summary>
-        private void HanldeZoomIn(){}
+        private void HanldeZoomIn() { }
 
         /// <summary>
         /// 处理卡牌移出缩小
         /// </summary>
-        private void HandleZoomOut(){}
+        private void HandleZoomOut() { }
 
 
         /// <summary>
@@ -177,14 +186,31 @@ namespace Larik.CardGame
         /// </summary>
         private void handleViewDetails() { }
 
+        /// <summary>
+        /// 处理显示回合结束按钮
+        /// </summary>
+        private void HandleShowTurnEndBtn()
+        {
+            TurnEndBtn.gameObject.SetActive(true);
+        }
 
         /// <summary>
-        /// 当回合结束按钮被按下时或因为其他原因回合结束
+        /// 处理隐藏回合结束按钮
         /// </summary>
-        public void OnTurnEnd()
+        private void HandleHideTurnEndBtn()
         {
+            TurnEndBtn.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// 处理回合结束
+        /// </summary>
+        private void HandleTurnEnd()
+        {
+            HandleHideTurnEndBtn();
             inputEnable = false; //关闭输入状态
             inputPromise.Resolve(); //结束输入模式
         }
+
     }
 }

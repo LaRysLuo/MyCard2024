@@ -31,15 +31,28 @@ namespace Larik.CardGame
 
         public UIManager uiManager;
 
+        private static GameFacede instance;
+        public static GameFacede Get()
+        {
+            if (instance == null)
+            {
+                Debug.LogError("游戏没有正常初始化");
+                return null;
+            }
+            return instance;
+        }
+
         public void InitGame()
         {
             Debug.Log("游戏初始化");
+            instance = this;
+            InitUIManager();
             InitPlayers();
             InitEffectManager();
             InitDataManager();
             InitTurnManager();
             InitInputManager();
-            InitUIManager();
+
         }
 
         #region 初始化
@@ -153,7 +166,8 @@ namespace Larik.CardGame
             actions.ForEach(action => action.OnComplete(_ =>
             {
                 count++;
-                if(count >= 2){
+                if (count >= 2)
+                {
                     Debug.LogWarning("双方玩家抽取完毕");
                     pms.Resolve();
                 }
@@ -170,7 +184,12 @@ namespace Larik.CardGame
             turnManager.StartGame();
         }
 
-        public ClientPlayer TurnPlayer(int current)
+        /// <summary>
+        /// 获得回合玩家
+        /// </summary>
+        /// <param name="current"></param>
+        /// <returns></returns>
+        public ClientPlayer GetTurnPlayer(int current)
         {
             return playerManager.playerList[current];
         }
@@ -182,20 +201,21 @@ namespace Larik.CardGame
         /// <returns></returns>
         private Promise OnTurnStart(int current, int turns)
         {
-            Debug.LogWarning("回合开始了");
+            Debug.LogWarning("新的回合开始了");
             Promise turnPromise = new();
             Promise.SequentialCall(new(){
         
                 //1. 抽1张牌
-                ()=>TurnPlayer(current).DrawCard(1),
+                ()=>GetTurnPlayer(current).DrawCard(1),
                 //2. 检查在此时要发动的牌
-                ()=>TurnPlayer(current).HandleTurnStartEffect(),
+                ()=>GetTurnPlayer(current).HandleTurnStartEffect(),
                 //3. 等待玩家进行回合
-                ()=> inputManager.Active(TurnPlayer(current))
+                ()=> inputManager.Active(GetTurnPlayer(current))
 
             }, 0.5f).OnComplete(_ =>
             {
                 //回合结束
+                Debug.LogWarning("回合结束");
                 turnPromise.Resolve();
             });
             return turnPromise;

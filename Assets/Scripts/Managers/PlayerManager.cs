@@ -26,6 +26,7 @@ namespace Larik.CardGame
         {
             playerList.Add(self);
             playerList.Add(opponet);
+    
             playerList.ForEach(player =>
             {
                 player.AddEventListener(onPlayerPlayedCard);

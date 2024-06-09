@@ -46,7 +46,7 @@ public class SequentialCaller
         }
         else
         {
-            Debug.LogWarning("SequentialCaller执行完毕");
+            // Debug.LogWarning("SequentialCaller执行完毕");
             resultPromise.Resolve();
         }
     }
